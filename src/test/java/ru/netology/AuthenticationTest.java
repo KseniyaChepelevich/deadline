@@ -22,7 +22,7 @@ import static com.codeborne.selenide.Condition.visible;
 
 import static com.codeborne.selenide.Selenide.open;
 
-public class DbInteraction {
+public class AuthenticationTest {
 
     @BeforeEach
     @SneakyThrows
