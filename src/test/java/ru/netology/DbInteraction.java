@@ -1,18 +1,34 @@
 package ru.netology;
 
+import com.codeborne.selenide.Condition;
+import com.codeborne.selenide.Configuration;
+import com.codeborne.selenide.SelenideElement;
 import com.github.javafaker.Faker;
 import lombok.SneakyThrows;
+import lombok.val;
+import org.apache.commons.dbutils.QueryRunner;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import ru.netology.mode.DataHelper;
+import ru.netology.web.page.LoginPage;
+
 import java.sql.DriverManager;
 
+
+import static com.codeborne.selenide.Condition.text;
+import static com.codeborne.selenide.Condition.visible;
+
+import static com.codeborne.selenide.Selenide.open;
+
 public class DbInteraction {
+
     @BeforeEach
     @SneakyThrows
     void setUp() {
         var faker = new Faker();
-        var dataSQL = "INSERT INTO users(login, password) VALUES (?, ?);";
+        var dataSQL = "INSERT INTO users(id, login, password) VALUES (?, ?, ?);";
 
         try (
                 var conn = DriverManager.getConnection(
@@ -20,47 +36,70 @@ public class DbInteraction {
                 );
                 var dataStmt = conn.prepareStatement(dataSQL);
         ) {
-            dataStmt.setString(1, faker.name().username());
-            dataStmt.setString(2, "password");
+            dataStmt.setString(1, faker.idNumber().valid());
+            dataStmt.setString(2, faker.name().username());
+            dataStmt.setString(3, faker.internet().password());
             dataStmt.executeUpdate();
-            dataStmt.setString(1, faker.name().username());
-            dataStmt.setString(2, "password");
-            dataStmt.executeUpdate();
+
+
         }
     }
 
-    @Test
+    @AfterAll
     @SneakyThrows
-    void stubTest() {
-        var countSQL = "SELECT COUNT(*) FROM users;";
-        var cardsSQL = "SELECT id, number, balance_in_kopecks FROM cards WHERE user_id = ?;";
+    static void deletingDataFromTheDb() {
+        var deleteFromAuthCodes = "DELETE FROM auth_codes;";
+        var deleteFromCards = "DELETE FROM cards;";
+        var deleteFromUsers = "DELETE FROM users;";
 
         try (
                 var conn = DriverManager.getConnection(
                         "jdbc:mysql://localhost:3306/app-db", "app", "mypass"
                 );
-                var countStmt = conn.createStatement();
-                var cardsStmt = conn.prepareStatement(cardsSQL);
+                var deleteStmt = conn.createStatement();
         ) {
-            try (var rs = countStmt.executeQuery(countSQL)) {
-                if (rs.next()) {
-                    // выборка значения по индексу столбца (нумерация с 1)
-                    var count = rs.getInt(1);
-                    // TODO: использовать
-                    System.out.println(count);
-                }
-            }
 
-            cardsStmt.setInt(1, 1);
-            try (var rs = cardsStmt.executeQuery()) {
-                while (rs.next()) {
-                    var id = rs.getInt("id");
-                    var number = rs.getString("number");
-                    var balanceInKopecks = rs.getInt("balance_in_kopecks");
-                    // TODO: сложить всё в список
-                    System.out.println(id + " " + number + " " + balanceInKopecks);
-                }
-            }
+            var authCodes = deleteStmt.executeUpdate(deleteFromAuthCodes);
+            var cards = deleteStmt.executeUpdate(deleteFromCards);
+            var users = deleteStmt.executeUpdate(deleteFromUsers);
+            System.out.println("delete from auth_codes" + authCodes + "\n" + "delete from cards" + cards + "\n" + "delete from users" + users);
         }
+
     }
+
+
+    @Test
+    public void shouldAuthorizationIsSuccessful() {
+        Configuration.holdBrowserOpen = true;
+        open("http://localhost:9999"); //Открыть приложение
+        val loginPage = new LoginPage();
+        val authInfo = DataHelper.getAuthInfo();
+        val verificationPage = loginPage.validLogin(authInfo);
+        val verificationCode = DataHelper.VerificationCode.getAuthCode();
+        verificationPage.validVerify(verificationCode);
+    }
+
+    @Test
+    public void shouldGiveErrorIfPasswordInvalid() {
+        Configuration.holdBrowserOpen = true;
+        open("http://localhost:9999"); //Открыть приложение
+        val loginPage = new LoginPage();
+        val authInfo = DataHelper.getInvalidAuthInfo();
+        val pageWithNotification = loginPage.invalidLogin(authInfo);
+        pageWithNotification.shouldBe(visible).shouldHave(text("Ошибка! Неверно указан логин или пароль"));
+
+    }
+
+    @Test
+    public void shouldGiveLockIfAnInvalidPasswordIsEnteredThreeTimes() {
+        Configuration.holdBrowserOpen = true;
+        open("http://localhost:9999"); //Открыть приложение
+        val loginPage = new LoginPage();
+        val authInfo = DataHelper.getInvalidAuthInfo();
+        val pageWithNotification = loginPage.invalidPasswordThreeTimes(authInfo);
+        pageWithNotification.shouldBe(visible).shouldHave(text("Ошибка! Превышено количество попыток ввода пароля"));
+
+    }
+
+
 }

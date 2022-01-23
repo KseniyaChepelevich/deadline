@@ -16,28 +16,8 @@ import java.sql.DriverManager;
 
 public class DbInteractionDbUtils {
 
-//    @AfterAll
-//    void deletingDataFromTheDb() {
-//        var runner = new QueryRunner();
-//
-//        var cardTrasactionsSQL = "DROP TABLE IF EXISTS card_transactions;";
-//        var authCodesSQL = "DROP TABLE IF EXISTS auth_codes;";
-//        var cardsSQL = "authCodesSQLDROP TABLE IF EXISTS cards;";
-//        var userSQL = "DROP TABLE IF EXISTS users;";
-//        var conn = DriverManager.getConnection(
-//                       "jdbc:mysql://localhost:3306/app-db", "app", "mypass"
-//                );
-//
-//
-//        {
-//
-//            runner.update(conn, cardTrasactionsSQL);
-//            runner.update(conn, authCodesSQL);
-//            runner.update(conn, cardsSQL);
-//            runner.update(conn, userSQL);
-//        }
-//
-//    }
+
+
     @Test
     @BeforeEach
     @SneakyThrows
