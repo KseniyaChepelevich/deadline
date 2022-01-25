@@ -14,27 +14,32 @@ public class LoginPage {
     private SelenideElement loginButton = $("[data-test-id=action-login]");
     private SelenideElement notification = $("[data-test-id=error-notification]");
 
-    public SelenideElement invalidLogin(DataHelper.AuthInfo invalidInfo) {
-        loginField.setValue(invalidInfo.getLogin());
-        passwordField.setValue(invalidInfo.getPassword());
-        loginButton.click();
+    public SelenideElement getNotificationAuth() {
         return notification.shouldBe(visible).shouldHave(text("Ошибка! Неверно указан логин или пароль"));
     }
 
-    public SelenideElement reEnteringAnInvalidPassword(DataHelper.AuthInfo invalidInfo) {
+    public SelenideElement getNotification() {
+        return notification.shouldBe(visible).shouldHave(text("Ошибка! Превышено количество попыток ввода пароля"));
+    }
+
+    public void invalidLogin(DataHelper.AuthInfo invalidInfo) {
+        loginField.setValue(invalidInfo.getLogin());
+        passwordField.setValue(invalidInfo.getPassword());
+        loginButton.click();
+    }
+
+    public void reEnteringAnInvalidPassword(DataHelper.AuthInfo invalidInfo) {
         String deleteString = Keys.chord(Keys.CONTROL, "a") + Keys.DELETE;
         passwordField.sendKeys(deleteString);
         passwordField.setValue(invalidInfo.getPassword());
         loginButton.click();
-        return notification.shouldBe(visible).shouldHave(text("Ошибка! Неверно указан логин или пароль"));
     }
 
-    public SelenideElement invalidPasswordThreeTimes(DataHelper.AuthInfo invalidInfo) {
-        String deleteString = Keys.chord(Keys.CONTROL, "a") + Keys.DELETE;
+    public void invalidPasswordThreeTimes(DataHelper.AuthInfo invalidInfo) {
+
         invalidLogin(invalidInfo);
         reEnteringAnInvalidPassword(invalidInfo);
         reEnteringAnInvalidPassword(invalidInfo);
-        return notification.shouldBe(visible).shouldHave(text("Ошибка! Превышено количество попыток ввода пароля"));
     }
 
     public VerificationPage validLogin(DataHelper.AuthInfo info) {

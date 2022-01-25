@@ -1,6 +1,7 @@
 package ru.netology.web.page;
 
 import com.codeborne.selenide.SelenideElement;
+import lombok.val;
 import ru.netology.mode.DataHelper;
 
 import java.time.Duration;
@@ -17,8 +18,9 @@ public class VerificationPage {
     }
 
     public DashboardPage validVerify(String code) {
+        val authInfo = DataHelper.getAuthInfo();
         codeField.shouldBe(visible, Duration.ofSeconds(60));
-        codeField.setValue(DataHelper.VerificationCode.getAuthCode());
+        codeField.setValue(DataHelper.VerificationCode.getAuthCode(authInfo));
         verifyButton.click();
         return new DashboardPage();
     }

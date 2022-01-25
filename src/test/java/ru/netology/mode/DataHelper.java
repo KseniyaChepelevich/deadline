@@ -44,7 +44,6 @@ public class DataHelper {
                 var authCodes = deleteStmt.executeUpdate(deleteFromAuthCodes);
                 var cards = deleteStmt.executeUpdate(deleteFromCards);
                 var users = deleteStmt.executeUpdate(deleteFromUsers);
-                System.out.println("delete from auth_codes" + authCodes + "\n" + "delete from cards" + cards + "\n" + "delete from users" + users);
             }
         }
     }
@@ -70,7 +69,6 @@ public class DataHelper {
                     while (code.next()) {
                         var verificationCode = code.getString("code");
                         authCode = verificationCode;
-                        System.out.println(verificationCode);
                     }
                 }
             }
