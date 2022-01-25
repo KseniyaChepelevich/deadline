@@ -3,7 +3,6 @@ package ru.netology.web.page;
 import com.codeborne.selenide.SelenideElement;
 import ru.netology.mode.DataHelper;
 
-
 import java.time.Duration;
 
 import static com.codeborne.selenide.Condition.visible;
@@ -16,7 +15,6 @@ public class VerificationPage {
     public VerificationPage() {
         codeField.shouldBe(visible, Duration.ofSeconds(60));
     }
-
 
     public DashboardPage validVerify(String code) {
         codeField.shouldBe(visible, Duration.ofSeconds(60));

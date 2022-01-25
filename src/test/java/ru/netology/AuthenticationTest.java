@@ -24,49 +24,11 @@ import static com.codeborne.selenide.Selenide.open;
 
 public class AuthenticationTest {
 
-    @BeforeEach
-    @SneakyThrows
-    void setUp() {
-        var faker = new Faker();
-        var dataSQL = "INSERT INTO users(id, login, password) VALUES (?, ?, ?);";
-
-        try (
-                var conn = DriverManager.getConnection(
-                        "jdbc:mysql://localhost:3306/app-db", "app", "mypass"
-                );
-                var dataStmt = conn.prepareStatement(dataSQL);
-        ) {
-            dataStmt.setString(1, faker.idNumber().valid());
-            dataStmt.setString(2, faker.name().username());
-            dataStmt.setString(3, faker.internet().password());
-            dataStmt.executeUpdate();
-
-
-        }
-    }
-
     @AfterAll
     @SneakyThrows
     static void deletingDataFromTheDb() {
-        var deleteFromAuthCodes = "DELETE FROM auth_codes;";
-        var deleteFromCards = "DELETE FROM cards;";
-        var deleteFromUsers = "DELETE FROM users;";
-
-        try (
-                var conn = DriverManager.getConnection(
-                        "jdbc:mysql://localhost:3306/app-db", "app", "mypass"
-                );
-                var deleteStmt = conn.createStatement();
-        ) {
-
-            var authCodes = deleteStmt.executeUpdate(deleteFromAuthCodes);
-            var cards = deleteStmt.executeUpdate(deleteFromCards);
-            var users = deleteStmt.executeUpdate(deleteFromUsers);
-            System.out.println("delete from auth_codes" + authCodes + "\n" + "delete from cards" + cards + "\n" + "delete from users" + users);
-        }
-
+        DataHelper.DeleteInfo.deletingData();
     }
-
 
     @Test
     public void shouldAuthorizationIsSuccessful() {
@@ -75,7 +37,7 @@ public class AuthenticationTest {
         val loginPage = new LoginPage();
         val authInfo = DataHelper.getAuthInfo();
         val verificationPage = loginPage.validLogin(authInfo);
-        val verificationCode = DataHelper.VerificationCode.getAuthCode();
+        val verificationCode = DataHelper.VerificationCode.getAuthCode(authInfo);
         verificationPage.validVerify(verificationCode);
     }
 
@@ -87,7 +49,6 @@ public class AuthenticationTest {
         val authInfo = DataHelper.getInvalidAuthInfo();
         val pageWithNotification = loginPage.invalidLogin(authInfo);
         pageWithNotification.shouldBe(visible).shouldHave(text("Ошибка! Неверно указан логин или пароль"));
-
     }
 
     @Test
@@ -98,8 +59,5 @@ public class AuthenticationTest {
         val authInfo = DataHelper.getInvalidAuthInfo();
         val pageWithNotification = loginPage.invalidPasswordThreeTimes(authInfo);
         pageWithNotification.shouldBe(visible).shouldHave(text("Ошибка! Превышено количество попыток ввода пароля"));
-
     }
-
-
 }

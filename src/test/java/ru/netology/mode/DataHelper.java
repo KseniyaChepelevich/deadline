@@ -1,15 +1,12 @@
 package ru.netology.mode;
 
-
 import com.github.javafaker.Faker;
 import lombok.SneakyThrows;
 import lombok.Value;
 
-
 import java.sql.DriverManager;
 
 import java.util.Locale;
-
 
 public class DataHelper {
     private DataHelper() {
@@ -30,53 +27,56 @@ public class DataHelper {
         return new AuthInfo("petya", faker.internet().password());
     }
 
-
-    public static class VerificationCode {
-
-
+    public static class DeleteInfo {
         @SneakyThrows
-        public static String getAuthCode() {
-            var userSQL = "SELECT id, login, password FROM users WHERE login = ?;";
-            var codeSQL = "SELECT code FROM auth_codes JOIN users ON auth_codes.user_id = users.id and login = ?;";
-            String authCode = null;
+        public static void deletingData() {
+            var deleteFromAuthCodes = "DELETE FROM auth_codes;";
+            var deleteFromCards = "DELETE FROM cards;";
+            var deleteFromUsers = "DELETE FROM users;";
 
             try (
                     var conn = DriverManager.getConnection(
                             "jdbc:mysql://localhost:3306/app-db", "app", "mypass"
                     );
-                    var userStmt = conn.prepareStatement(userSQL);
+                    var deleteStmt = conn.createStatement();
+            ) {
+
+                var authCodes = deleteStmt.executeUpdate(deleteFromAuthCodes);
+                var cards = deleteStmt.executeUpdate(deleteFromCards);
+                var users = deleteStmt.executeUpdate(deleteFromUsers);
+                System.out.println("delete from auth_codes" + authCodes + "\n" + "delete from cards" + cards + "\n" + "delete from users" + users);
+            }
+        }
+    }
+
+    public static class VerificationCode {
+
+        @SneakyThrows
+        public static String getAuthCode(DataHelper.AuthInfo info) {
+            var codeSQL = "SELECT code FROM auth_codes JOIN users ON auth_codes.user_id = users.id and login = ?;";
+            String authCode = null;
+            String login = info.getLogin();
+
+
+            try (
+                    var conn = DriverManager.getConnection(
+                            "jdbc:mysql://localhost:3306/app-db", "app", "mypass"
+                    );
                     var codeStmt = conn.prepareStatement(codeSQL);
             ) {
-                userStmt.setString(1, "vasya");
-                codeStmt.setString(1, "vasya");
+                codeStmt.setString(1, login);
 
-                try (var rs = userStmt.executeQuery()) {
-                    while (rs.next()) {
-                        var id = rs.getString("id");
-                        var login = rs.getString("login");
-                        var password = rs.getString("password");
-                        System.out.println(id + " | " + login + " | " + password);
-
-
-                        try (var code = codeStmt.executeQuery()) {
-                            while (code.next()) {
-                                var verificationCode = code.getString("code");
-                                authCode = verificationCode;
-                                System.out.println(verificationCode);
-
-
-                            }
-
-                        }
-
+                try (var code = codeStmt.executeQuery()) {
+                    while (code.next()) {
+                        var verificationCode = code.getString("code");
+                        authCode = verificationCode;
+                        System.out.println(verificationCode);
                     }
-
                 }
-
-
             }
             return authCode;
         }
-
     }
+
+
 }
